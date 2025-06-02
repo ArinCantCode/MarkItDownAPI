@@ -2,6 +2,7 @@ from markitdown import MarkItDown
 
 from flask_cors import CORS
 from flask import Flask, request, jsonify
+import os
 
 md = MarkItDown()
 
