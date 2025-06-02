@@ -2,6 +2,7 @@ from markitdown import MarkItDown
 
 from flask_cors import CORS
 from flask import Flask, request, abort
+import socket
 import os
 
 md = MarkItDown()
@@ -56,4 +57,5 @@ def extract_text():
     return jsonify({'error': 'Invalid file type'}), 400
 
 if __name__ == '__main__':
+    print("Hostname:", socket.gethostname())
     app.run(debug=True, host="0.0.0.0", port=5000)  # Expose on port 5000
