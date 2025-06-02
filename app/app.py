@@ -8,7 +8,7 @@ md = MarkItDown()
 app = Flask(__name__)
 
 DOMAIN = os.getenv("CORS_DOMAIN")
-SECRET = os.getenv("WELEARNIN_SECRET")
+SECRET = os.getenv("MARK_IT_DOWN_SECRET")
 
 # Enable CORS for all domains (or configure it to allow only specific domains)
 CORS(app, origins=[DOMAIN])
