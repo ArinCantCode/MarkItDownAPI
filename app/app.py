@@ -6,8 +6,18 @@ from flask import Flask, request, jsonify
 md = MarkItDown()
 
 app = Flask(__name__)
+
+DOMAIN = os.getenv("CORS_DOMAIN")
+SECRET = os.getenv("WELEARNIN_SECRET")
+
 # Enable CORS for all domains (or configure it to allow only specific domains)
-CORS(app)
+CORS(app, origins=[DOMAIN])
+
+@app.before_request
+def check_secret_token():
+    token = request.headers.get("X-WeLearnin-Token")
+    if token != SECRET:
+        abort(403, description="Forbidden");
 
 ALLOWED_MIME_TYPES = {
     'application/pdf',
