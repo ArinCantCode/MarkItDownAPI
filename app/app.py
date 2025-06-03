@@ -39,23 +39,34 @@ def allowed_file(file):
 def extract_text():
       # Ensure that 'file' is in the incoming request
     if 'file' not in request.files:
+        print("no file part")
         return jsonify({'error': 'No file part'}), 400
 
     file = request.files['file']
-    # Add more cases for other file types...
 
     # Check if the file is valid and allowed
     if file and allowed_file(file):
         try:
-            file.stream.seek(0)
-            result = md.convert_stream(file.stream)
-            return jsonify({
-                'message': 'File processed successfully',
-                'text': getattr(result, "text_content", "")
-            })
+            print("Incoming file:", request.files)
+            if 'file' not in request.files:
+                return jsonify({'error': 'No file part'}), 400
+
+            file = request.files['file']
+            print("Received file:", file.filename, file.mimetype)
+
+            if file and allowed_file(file):
+                file.stream.seek(0)
+                result = md.convert_stream(file.stream)
+                return jsonify({
+                    'message': 'File processed successfully',
+                    'text': getattr(result, "text_content", "")
+                })
+
+            return jsonify({'error': 'Invalid file type'}), 400
         except Exception as e:
-            app.logger.error(f"File processing error: {e}")
-            return jsonify({'error': 'Internal server error'}), 500
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Internal Server Error: {str(e)}'}), 500
 
     return jsonify({'error': 'Invalid file type'}), 400
 
