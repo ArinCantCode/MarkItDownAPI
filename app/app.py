@@ -4,6 +4,7 @@ from markitdown import MarkItDown
 import os
 import socket
 import traceback
+import io 
 
 app = Flask(__name__)
 md = MarkItDown()
@@ -24,7 +25,7 @@ ALLOWED_MIME_TYPES = {
 }
 
 def allowed_file(file):
-    """Check if the file's MIME type is allowed."""
+    """Check if the file's MIME type / extension is allowed."""
     ext_allowed = file.filename.lower().endswith(('.pdf', '.docx', '.pptx', '.txt'))
     mime_allowed = file.mimetype in ALLOWED_MIME_TYPES
     return ext_allowed and mime_allowed
@@ -32,7 +33,7 @@ def allowed_file(file):
 @app.before_request
 def check_secret_token():
     if request.method == "OPTIONS":
-        return '', 200  # Let preflight pass
+        return '', 200  # For preflight
     token = request.headers.get("X-WeLearnin-Token")
     if token != SECRET:
         abort(403, description="Forbidden")
@@ -45,15 +46,10 @@ def extract_text():
 
         file = request.files['file']
         if file and allowed_file(file):
-            # Optional: Save file for debugging
-            # file.save(f"/tmp/debug-{file.filename}")
+            # Read content into BytesIO to guarantee seekability
+            byte_stream = io.BytesIO(file.read())
 
-            try:
-                file.stream.seek(0)
-            except Exception:
-                pass  # Some streams don't support seek
-
-            result = md.convert_stream(file.stream)
+            result = md.convert_stream(byte_stream)
 
             return jsonify({
                 'success': True,
