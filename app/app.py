@@ -1,7 +1,7 @@
 from markitdown import MarkItDown
 
 from flask_cors import CORS
-from flask import Flask, request, abort
+from flask import Flask, request, abort, jsonify
 import socket
 import os
 
@@ -17,10 +17,12 @@ CORS(app, origins=[DOMAIN])
 
 @app.before_request
 def check_secret_token():
+    if request.method == "OPTIONS":
+        return '', 200
     token = request.headers.get("X-WeLearnin-Token")
     if token != SECRET:
-        abort(403, description="Forbidden");
-
+        abort(403, description="Forbidden")
+        
 ALLOWED_MIME_TYPES = {
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -29,10 +31,9 @@ ALLOWED_MIME_TYPES = {
 }
 
 def allowed_file(file):
-    """
-    Check if the file's MIME type is allowed.
-    """
-    return file.mimetype in ALLOWED_MIME_TYPES
+    ext_allowed = file.filename.lower().endswith(('.pdf', '.docx', '.pptx', '.txt'))
+    mime_allowed = file.mimetype in ALLOWED_MIME_TYPES
+    return ext_allowed and mime_allowed
 
 @app.route('/extract', methods=['POST'])
 def extract_text():
@@ -46,13 +47,15 @@ def extract_text():
     # Check if the file is valid and allowed
     if file and allowed_file(file):
         try:
+            file.stream.seek(0)
             result = md.convert_stream(file.stream)
             return jsonify({
                 'message': 'File processed successfully',
-                'text': result.text_content  # Assuming result has 'text_content'
+                'text': getattr(result, "text_content", "")
             })
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            app.logger.error(f"File processing error: {e}")
+            return jsonify({'error': 'Internal server error'}), 500
 
     return jsonify({'error': 'Invalid file type'}), 400
 
