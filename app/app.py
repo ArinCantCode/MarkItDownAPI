@@ -38,6 +38,7 @@ def check_secret_token():
 @app.route('/extract', methods=['POST'])
 def extract_text():
     try:
+        process = psutil.Process(os.getpid()) 
         if 'file' not in request.files:
             return jsonify({'error': 'No file part'}), 400
 
