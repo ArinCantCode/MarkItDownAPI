@@ -1,10 +1,7 @@
 from flask import Flask, request, jsonify, abort
 from flask_cors import CORS
 from markitdown import MarkItDown
-import os
-import socket
-import traceback
-import io 
+import os, psutil, socket, io, traceback
 
 app = Flask(__name__)
 md = MarkItDown()
@@ -46,11 +43,14 @@ def extract_text():
 
         file = request.files['file']
         if file and allowed_file(file):
+            print(f"[Memory] Before reading stream: {process.memory_info().rss / 1024 ** 2:.2f} MB")
             # Read content into BytesIO to guarantee seekability
             byte_stream = io.BytesIO(file.read())
 
+            print(f"[Memory] After reading stream: {process.memory_info().rss / 1024 ** 2:.2f} MB")
             result = md.convert_stream(byte_stream)
 
+            print(f"[Memory] After conversion: {process.memory_info().rss / 1024 ** 2:.2f} MB")
             return jsonify({
                 'success': True,
                 'message': 'File processed successfully',
